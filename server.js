@@ -15,9 +15,19 @@ const rooms = new Map([])
 app.use(cors({
     origin: `http://localhost:${PORT}`
 }))
-app.get('/rooms', (req, res) => {
+app.use(express.urlencoded({extended: true}))
 
-    res.json(rooms)
+
+app.get('/rooms/:id', (req, res) => {
+    const roomId = req.params.id
+    console.log(roomId)
+    const obj = rooms.has(roomId)
+        ? {
+            users: [...rooms.get(roomId).get('users').values()],
+            messages: [...rooms.get(roomId).get('messages').values()]
+        }
+        : {users: [], messages: []}
+    res.json(obj)
 })
 app.post('/rooms', (req, res) => {
     const {roomId, userName} = req.body
@@ -27,9 +37,24 @@ app.post('/rooms', (req, res) => {
             ['messages', []]
         ]))
     }
-    res.json([...rooms.keys()])
+    res.send()
 })
 io.on('connection', (socket => {
+    socket.on('ROOM:JOIN', ({roomId, userName}) => {
+        socket.join(roomId)
+        rooms.get(roomId).get('users').set(socket.id, userName)
+        const users = [...rooms.get(roomId).get('users').values()]
+        socket.to(roomId).emit('ROOM:SET-USERS', users)
+    })
+    socket.on('disconnect', () => {
+        rooms.forEach((value, roomId) => {
+            if (value.get('users').delete(socket.id)) {
+                const users = [...value.get('users').values()]
+                socket.broadcast.to(roomId).emit('ROOM:SET-USERS', users)
+            }
+        })
+    })
+
     console.log('user connected', socket.id)
 }))
 

@@ -1,8 +1,13 @@
 import React, {ChangeEvent, useState} from 'react';
+
 import axios from "axios";
 
-export type PropsType = {
-    onLogin: () => void
+type PropsType = {
+    onLogin: (obj: ObjType) => void
+}
+export type ObjType = {
+    roomId: string
+    userName: string
 }
 
 export const JoinBlock = ({onLogin}: PropsType) => {
@@ -20,9 +25,13 @@ export const JoinBlock = ({onLogin}: PropsType) => {
         if (!roomId || !userName) {
             return alert('Wrong data')
         }
+        const obj: ObjType = {
+            roomId,
+            userName
+        }
         setLoading(true)
-        await axios.post('/rooms', {roomId, userName})
-        onLogin()
+        await axios.post('/rooms', obj)
+        onLogin(obj)
     }
 
     return (

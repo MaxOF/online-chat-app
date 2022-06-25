@@ -1,8 +1,21 @@
 export default (state: initialStateType, action: any) => {
     switch (action.type) {
-        case 'IS-AUTH':
+        case 'JOINED':
             return {
-                ...state, isAuth: action.payload
+                ...state,
+                joined: true,
+                userName: action.payload.userName,
+                roomId: action.payload.roomId
+            }
+        case 'SET-USERS':
+            return {
+                ...state,
+                users: action.payload
+            }
+        case 'SET-MESSAGES':
+            return {
+                ...state,
+                messages: action.payload
             }
         default:
             return state
@@ -10,7 +23,11 @@ export default (state: initialStateType, action: any) => {
 }
 
 export type initialStateType = {
-    isAuth: boolean
+    joined: boolean
+    roomId: string
+    userName: string
+    users: []
+    messages: []
 }
 export type ActionsType = {
 

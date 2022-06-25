@@ -1,28 +1,52 @@
-import React, {useReducer} from 'react';
+import React, {useEffect, useReducer} from 'react';
 import './App.css';
-import {JoinBlock} from "./components/JoinBlock";
+import {JoinBlock, ObjType} from "./components/JoinBlock";
 import socket from './socket'
 import reducer from "./reducer";
+import {Chat} from "./components/Chat";
+import axios, {AxiosResponse} from "axios";
 
 
 
 function App() {
 
     const [state, dispatch] = useReducer(reducer, {
-        isAuth: false
+        joined: false,
+        roomId: null,
+        userName: null,
+        users: [],
+        messages: []
     })
-
-    const onLogin = () => {
+    const setUsers = (users: []) => {
         dispatch({
-            type: 'IS-AUTH',
-            payload: true
+            type: 'SET-USERS',
+            payload: users
         })
     }
-    console.log(state)
+
+    const onLogin = async (obj: ObjType) => {
+        dispatch({
+            type: 'JOINED',
+            payload: obj
+        })
+        socket.emit('ROOM:JOIN', obj)
+        const {data} = await axios.get(`/rooms/${obj.roomId}`)
+        setUsers(data.users)
+    }
+    useEffect(() => {
+        socket.on('ROOM:SET-USERS', setUsers)
+    }, [])
 
     return (
         <div className="wrapper">
-            {!state.isAuth && <JoinBlock onLogin={onLogin}/>}
+            {
+                !state.joined
+                ? <JoinBlock onLogin={onLogin}/>
+                : <Chat
+                        users={state.users}
+                        messages={state.messages}
+                    />
+            }
         </div>
     );
 }
