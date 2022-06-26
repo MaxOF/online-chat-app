@@ -1,21 +1,46 @@
-import React, {ChangeEvent, useState} from 'react';
+import React, {ChangeEvent, useEffect, useRef, useState} from 'react';
+import socket from '../socket'
 
 type PropsType = {
     users: []
-    messages: []
+    messages: MessageType[]
+    userName: string
+    roomId: string
+    onAddMessage: (message: MessageType) => void
+}
+export type MessageType = {
+    text: string
+    userName: string
 }
 
-export const Chat = ({users, messages}:PropsType) => {
+export const Chat = ({users, messages, userName, roomId, onAddMessage}: PropsType) => {
     const [messageValue, setMessageValue] = useState<string>('')
+    const messagesRef = useRef(null)
 
     const textAreaHandler = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setMessageValue(e.currentTarget.value)
     }
+    const onSendMessage = () => {
+        socket.emit('ROOM:NEW-MESSAGE', {
+            roomId,
+            userName,
+            text: messageValue
+        })
+        onAddMessage({
+            userName,
+            text: messageValue
+        })
+        setMessageValue('')
+    }
+
+    // useEffect(() => {
+    //     messagesRef.current
+    // }, [messages])
 
     return (
         <div className="chat">
             <div className="chat-users">
-                Room: <b>{}</b>
+                Room: <b>{roomId}</b>
                 <hr/>
                 <b>Online ({users.length}):</b>
                 <ul>
@@ -23,8 +48,17 @@ export const Chat = ({users, messages}:PropsType) => {
                 </ul>
             </div>
             <div className="chat-messages">
-                <div className="messages">
-
+                <div ref={messagesRef} className="messages">
+                    {
+                        messages.map(message => {
+                            return <div className="message">
+                                <p>{message.text}</p>
+                                <div>
+                                    <span>{message.userName}</span>
+                                </div>
+                            </div>
+                        })
+                    }
                 </div>
                 <form>
           <textarea
@@ -33,7 +67,7 @@ export const Chat = ({users, messages}:PropsType) => {
               className='form-control'
               rows={3}
           />
-                    <button type="button" className="btn btn-primary">
+                    <button onClick={onSendMessage} type="button" className="btn btn-primary">
                         Отправить
                     </button>
                 </form>

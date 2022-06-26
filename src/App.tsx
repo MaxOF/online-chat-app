@@ -3,8 +3,8 @@ import './App.css';
 import {JoinBlock, ObjType} from "./components/JoinBlock";
 import socket from './socket'
 import reducer from "./reducer";
-import {Chat} from "./components/Chat";
-import axios, {AxiosResponse} from "axios";
+import {Chat, MessageType} from "./components/Chat";
+import axios from "axios";
 
 
 
@@ -23,6 +23,12 @@ function App() {
             payload: users
         })
     }
+    const addMessage = (message: MessageType) => {
+        dispatch({
+            type: 'NEW-MESSAGE',
+            payload: message
+        })
+    }
 
     const onLogin = async (obj: ObjType) => {
         dispatch({
@@ -32,19 +38,31 @@ function App() {
         socket.emit('ROOM:JOIN', obj)
         const {data} = await axios.get(`/rooms/${obj.roomId}`)
         setUsers(data.users)
+        dispatch({
+            type: 'SET-DATA',
+            payload: data
+        })
     }
+
+
     useEffect(() => {
         socket.on('ROOM:SET-USERS', setUsers)
+        socket.on('ROOM:NEW-MESSAGE', message => {
+            addMessage(message)
+        })
     }, [])
 
     return (
         <div className="wrapper">
             {
                 !state.joined
-                ? <JoinBlock onLogin={onLogin}/>
-                : <Chat
+                    ? <JoinBlock onLogin={onLogin}/>
+                    : <Chat
                         users={state.users}
                         messages={state.messages}
+                        userName={state.userName}
+                        roomId={state.roomId}
+                        onAddMessage={addMessage}
                     />
             }
         </div>
