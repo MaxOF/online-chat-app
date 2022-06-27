@@ -15,27 +15,29 @@ export type MessageType = {
 
 export const Chat = ({users, messages, userName, roomId, onAddMessage}: PropsType) => {
     const [messageValue, setMessageValue] = useState<string>('')
-    const messagesRef = useRef(null)
+    const messagesRef = useRef<any>(null)
 
     const textAreaHandler = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setMessageValue(e.currentTarget.value)
     }
     const onSendMessage = () => {
-        socket.emit('ROOM:NEW-MESSAGE', {
-            roomId,
-            userName,
-            text: messageValue
-        })
-        onAddMessage({
-            userName,
-            text: messageValue
-        })
-        setMessageValue('')
+        if (messageValue.trim() !== '') {
+            socket.emit('ROOM:NEW-MESSAGE', {
+                roomId,
+                userName,
+                text: messageValue
+            })
+            onAddMessage({
+                userName,
+                text: messageValue
+            })
+            setMessageValue('')
+        }
     }
 
-    // useEffect(() => {
-    //     messagesRef.current
-    // }, [messages])
+    useEffect(() => {
+        messagesRef.current.scrollTo(0, 99999)
+    }, [messages])
 
     return (
         <div className="chat">
@@ -61,13 +63,13 @@ export const Chat = ({users, messages, userName, roomId, onAddMessage}: PropsTyp
                     }
                 </div>
                 <form>
-          <textarea
-              value={messageValue}
-              onChange={textAreaHandler}
-              className='form-control'
-              rows={3}
-          />
-                    <button onClick={onSendMessage} type="button" className="btn btn-primary">
+                     <textarea
+                         value={messageValue}
+                         onChange={textAreaHandler}
+                         className='form-control'
+                         rows={3}
+                     />
+                    <button onClick={onSendMessage} type="button">
                         Отправить
                     </button>
                 </form>

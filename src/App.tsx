@@ -7,7 +7,6 @@ import {Chat, MessageType} from "./components/Chat";
 import axios from "axios";
 
 
-
 function App() {
 
     const [state, dispatch] = useReducer(reducer, {
